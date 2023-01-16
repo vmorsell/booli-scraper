@@ -53,7 +53,7 @@ func main() {
 
 		// Address.
 		c.OnHTML("h1.lzFZY._10w08", func(e *colly.HTMLElement) {
-			apt.Address = e.Text
+			apt.Address = strings.ReplaceAll(e.Text, "\u00ad", "")
 		})
 
 		// Price.

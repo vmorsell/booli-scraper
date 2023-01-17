@@ -32,6 +32,7 @@ type Apartment struct {
 	Price          int
 	EstimatedValue int
 	Fee            int
+	ImageURLs      []string
 }
 
 func main() {
@@ -43,7 +44,7 @@ func main() {
 
 	s := bufio.NewScanner(f)
 	for s.Scan() {
-		url := s.Text()
+		adURL := s.Text()
 
 		apt := Apartment{}
 
@@ -108,6 +109,21 @@ func main() {
 
 		})
 
+		// Get Images from the Apollo state.
+		c.OnHTML("script", func(e *colly.HTMLElement) {
+			if strings.HasPrefix(e.Text, "window.__APOLLO_STATE__") {
+				re := regexp.MustCompile(`\"Image:([0-9]+)\":\{.*?\"width\":([0-9]+),\"height\":([0-9]+).*?\}`)
+				matches := re.FindAllStringSubmatch(e.Text, -1)
+				for _, m := range matches {
+					id := m[1]
+					width := m[2]
+					height := m[3]
+					url := fmt.Sprintf("https://bcdn.se/images/cache/%s_%sx%s.jpg", id, width, height)
+					apt.ImageURLs = append(apt.ImageURLs, url)
+				}
+			}
+		})
+
 		c.OnRequest(func(r *colly.Request) {
 			r.Headers.Set("User-Agent", randomString())
 			fmt.Printf("Scraping %s... ", r.URL.String())
@@ -122,7 +138,7 @@ func main() {
 			log.Printf("\nError: %s\n", err)
 		})
 
-		if err := c.Visit(url); err != nil {
+		if err := c.Visit(adURL); err != nil {
 			log.Printf("visit: %s\n", err)
 		}
 	}

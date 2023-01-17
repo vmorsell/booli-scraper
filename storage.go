@@ -91,8 +91,16 @@ func (s *FileStorage) Put(apt Apartment) error {
 func downloadImage(url, dir string) (bool, error) {
 	fileName := fmt.Sprintf("%s/%s", dir, url[strings.LastIndex(url, "/")+1:])
 
+	// Ensure folder path exist
+	if err := os.MkdirAll(filepath.Dir(fileName), os.ModePerm); err != nil {
+		return false, fmt.Errorf("mkdirall: %w", err)
+	}
+
 	// Skip if the file is already downloaded.
-	if _, err := os.Stat(fileName); err != nil {
+	// os.Stat runs normally if file exists.
+	// it's expected behaviour for os.Stat, so it doesn't throw an error
+	_, err := os.Stat(fileName)
+	if err == nil {
 		return false, nil
 	}
 

@@ -42,6 +42,8 @@ func main() {
 	}
 	defer f.Close()
 
+	storage := NewFileStorage("./storage")
+
 	s := bufio.NewScanner(f)
 	for s.Scan() {
 		adURL := s.Text()
@@ -126,12 +128,14 @@ func main() {
 
 		c.OnRequest(func(r *colly.Request) {
 			r.Headers.Set("User-Agent", randomString())
-			fmt.Printf("Scraping %s... ", r.URL.String())
+			fmt.Printf("Scraping %s...\n", r.URL.String())
 		})
 
 		c.OnScraped(func(_ *colly.Response) {
+			if err := storage.Put(apt); err != nil {
+				log.Fatalf("\nput: %v", err)
+			}
 			fmt.Println("Done.")
-			fmt.Printf("%#v\n", apt)
 		})
 
 		c.OnError(func(_ *colly.Response, err error) {
@@ -141,6 +145,7 @@ func main() {
 		if err := c.Visit(adURL); err != nil {
 			log.Printf("visit: %s\n", err)
 		}
+
 	}
 }
 

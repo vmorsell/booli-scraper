@@ -25,6 +25,7 @@ func randomString() string {
 
 // Apartment is the model for an apartment object.
 type Apartment struct {
+	ID             int
 	Address        string
 	Floor          float64
 	Area           int
@@ -53,6 +54,13 @@ func main() {
 		c := colly.NewCollector(
 			colly.AllowedDomains("www.booli.se", "bcdn.se"),
 		)
+
+		// ID.
+		id, err := parseID(adURL)
+		if err != nil {
+			log.Fatalf("parse id: %v", err)
+		}
+		apt.ID = id
 
 		// Address.
 		c.OnHTML("h1.lzFZY._10w08", func(e *colly.HTMLElement) {
@@ -147,6 +155,16 @@ func main() {
 		}
 
 	}
+}
+
+// parseID extracts the ad ID from the URL.
+func parseID(url string) (int, error) {
+	strID := url[strings.LastIndex(url, "/")+1:]
+	id, err := strconv.Atoi(strID)
+	if err != nil {
+		return 0, fmt.Errorf("atoi: %w", err)
+	}
+	return id, nil
 }
 
 // parseArea extracts the area expressed as an integer.

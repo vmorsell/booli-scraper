@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -41,7 +42,10 @@ func (s *FileStorage) Put(apt Apartment) error {
 	}
 
 	// Ensure apartment dir exists.
-	dir := fmt.Sprintf("%s/%s", s.root, apt.Address)
+	address := strings.ReplaceAll(apt.Address, " ", "_")
+	address = strings.ToLower(address)
+
+	dir := fmt.Sprintf("%s/%s_%d", s.root, address, apt.ID)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err := os.Mkdir(dir, 0755)
 		if err != nil {

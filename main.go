@@ -43,7 +43,7 @@ func main() {
 	}
 	defer f.Close()
 
-	storage := NewFileStorage("./storage")
+	storage := NewSQLStorage("db.sql", "images")
 
 	s := bufio.NewScanner(f)
 	for s.Scan() {

@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"os"
 
 	_ "modernc.org/sqlite"
 )
@@ -80,14 +79,8 @@ func (s *SQLStorage) Put(apt Apartment) error {
 		return fmt.Errorf("exec: %w", err)
 	}
 
-	// Download and store images to file system.
-	if _, err := os.Stat(s.filesRoot); err != nil {
-		if !os.IsNotExist(err) {
-			return fmt.Errorf("files root stat: %w", err)
-		}
-		if err := os.Mkdir(s.filesRoot, 0755); err != nil {
-			return fmt.Errorf("mk files root: %w", err)
-		}
+	if err := ensureDir(s.filesRoot, 0775); err != nil {
+		return fmt.Errorf("ensure root dir: %w", err)
 	}
 
 	for i, url := range apt.ImageURLs {

@@ -29,23 +29,16 @@ func NewFSStorage(root string) Storage {
 
 // Put stores an apartment in the file system storage.
 func (s *FSStorage) Put(apt Apartment) error {
-	// Ensure store root dir exists.
-	if _, err := os.Stat(s.root); os.IsNotExist(err) {
-		if err := os.Mkdir(s.root, 0755); err != nil {
-			return fmt.Errorf("make root dir: %w", err)
-		}
+	if err := ensureDir(s.root, 0775); err != nil {
+		return fmt.Errorf("ensure root dir: %w", err)
 	}
 
-	// Ensure apartment dir exists.
 	address := strings.ReplaceAll(apt.Address, " ", "_")
 	address = strings.ToLower(address)
 
 	dir := fmt.Sprintf("%s/%s_%d", s.root, address, apt.ID)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err := os.Mkdir(dir, 0755)
-		if err != nil {
-			return fmt.Errorf("mkdir: %w", err)
-		}
+	if err := ensureDir(dir, 0755); err != nil {
+		return fmt.Errorf("ensure apartment dir: %w", err)
 	}
 
 	// Write apartment data.
@@ -64,16 +57,13 @@ func (s *FSStorage) Put(apt Apartment) error {
 		return fmt.Errorf("write: %w", err)
 	}
 
-	// Ensure images directory exists.
-	imagesDir := fmt.Sprintf("%s/%s", dir, imagesDirName)
-	if _, err := os.Stat(imagesDir); os.IsNotExist(err) {
-		if err := os.Mkdir(imagesDir, 0755); err != nil {
-			return fmt.Errorf("create images dir: %w", err)
-		}
+	d := strings.Join([]string{dir, imagesDirName}, "/")
+	if err := ensureDir(d, 0775); err != nil {
+		return fmt.Errorf("ensure images dir: %w", err)
 	}
 
 	for i, url := range apt.ImageURLs {
-		downloaded, err := downloadImage(url, imagesDir)
+		downloaded, err := downloadImage(url, d)
 		if err != nil {
 			return fmt.Errorf("download image: %w", err)
 		}
